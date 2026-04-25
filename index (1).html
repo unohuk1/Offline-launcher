@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HTML Game Launcher</title>
+<link rel="manifest" href="manifest.webmanifest">
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("service-worker.js");
+  }
+</script>
+
+<style>/* ========================= */
+/*        THEME ROOTS        */
+/* ========================= */
+:root {
+  --bg: #0b1015;
+  --bg-alt: #111821;
+  --bg-soft: #161b22;
+  --border: #202938;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --accent: #2385ff;
+}
+
+:root[data-theme="light"] {
+  --bg: #f3f4f6;
+  --bg-alt: #ffffff;
+  --bg-soft: #e5e7eb;
+  --border: #d1d5db;
+  --text: #111827;
+  --muted: #6b7280;
+}
+
+/* ========================= */
+/*        GLOBAL STYLE       */
+/* ========================= */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ========================= */
+/*         SIDEBAR           */
+/* ========================= */
+.sidebar {
+  width: 260px;
+  background: var(--bg-alt);
+  border-right: 1px solid var(--border);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidebar-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.sidebar-sub {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.btn {
+  background: var(--accent);
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btn.secondary {
+  background: var(--bg-soft);
+  color: var(--text);
+}
+
+.nav-item {
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  background: var(--bg-soft);
+  font-size: 0.9rem;
+}
+
+.nav-item:hover,
+.nav-item.active {
+  outline: 1px solid var(--accent);
+}
+
+.edit-toggle {
+  margin-top: 10px;
+}
+
+.edit-label {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* ========================= */
+/*         FOOTER            */
+/* ========================= */
+.sidebar-footer {
+  margin-top: auto;
+  font-size: 0.75rem;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.theme-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ========================= */
+/*           MAIN            */
+/* ========================= */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  padding: 10px;
+  background: var(--bg-alt);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+#search {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+  color: var(--text);
+}
+
+/* ========================= */
+/*        GAME LIST          */
+/* ========================= */
+#gameList {
+  padding: 12px 16px;
+  overflow-y: auto;
+  flex: 1;
+  background: var(--bg);
+}
+
+.game {
+  background: var(--bg-soft);
+  padding: 8px 10px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.game:hover {
+  outline: 1px solid var(--accent);
+}
+
+.icon {
+  width: 40px;
+  height: 40px;
+  background: var(--accent);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: white;
+}
+
+.game-title {
+  flex: 1;
+  font-size: 0.95rem;
+}
+
+.fav {
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+/* ========================= */
+/*        GAME VIEW          */
+/* ========================= */
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border);
+}
+
+.frame-wrapper {
+  flex: 1;
+  position: relative;
+  background: black;
+}
+
+#gameFrame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: none;
+  background: black;
+}
+
+#placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 1.1rem;
+  text-align: center;
+  padding: 0 20px;
+}
+
+.bottombar {
+  padding: 6px 10px;
+  background: var(--bg-alt);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.frame-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  background: black;
+}
+
+#gameFrame {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.bigview {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: black;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bigview iframe {
+  width: 90vw;
+  height: 90vh;
+  border: none;
+}
+
+#bigviewClose {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  z-index: 10000;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: none;
+}
+
+.bigview #bigviewClose {
+  display: block;
+}
+
+
+/* ========================= */
+/*          MODALS           */
+/* ========================= */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 20000;
+}
+
+.modal {
+  background: var(--bg-alt);
+  border-radius: 8px;
+  padding: 16px;
+  width: 320px;
+  max-width: 90vw;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal h2 {
+  margin: 0 0 4px 0;
+  font-size: 1.1rem;
+}
+
+.modal label {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.modal input[type="text"],
+.modal input[type="file"],
+.modal textarea {
+  width: 100%;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+
+.modal textarea {
+  resize: vertical;
+  min-height: 50px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ========================= -->
+<!--        SIDEBAR           -->
+<!-- ========================= -->
+<div class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-title">Launcher</div>
+    <div class="sidebar-sub" id="status">Loading…</div>
+  </div>
+
+  <button class="btn" id="addGameBtn">Add Game</button>
+  <button class="btn" id="addFolderBtn">Add Folder</button>
+
+  <div class="nav-item active" data-view="all">All Games</div>
+  <div class="nav-item" data-view="favorites">Favorites</div>
+  <div class="nav-item" data-view="recent">Recently Played</div>
+
+  <div class="edit-toggle">
+    <label class="edit-label">Edit Mode</label>
+    <button class="btn secondary" id="editModeBtn">OFF</button>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="theme-row">
+      <span>Theme:</span>
+      <button class="btn secondary" id="themeToggleBtn">Dark</button>
+    </div>
+
+    <div class="theme-row">
+      <span>Accent:</span>
+      <input type="color" id="accentPicker" value="#2385ff">
+    </div>
+
+    <div class="theme-row">
+      <button class="btn secondary" id="exportSettingsBtn">Export settings.txt</button>
+    </div>
+
+    <div class="theme-row">
+      <input type="file" id="importSettingsInput" accept=".txt" style="display:none;">
+      <button class="btn secondary" id="importSettingsBtn">Import settings.txt</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ========================= -->
+<!--          MAIN             -->
+<!-- ========================= -->
+<div class="main">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <input id="search" placeholder="Search games…">
+    <button class="btn secondary" id="randomBtn">Random</button>
+  </div>
+
+  <!-- GAME LIST -->
+  <div id="gameList"></div>
+
+  <!-- GAME VIEW -->
+  <div class="content">
+    <div class="frame-wrapper">
+      <button id="bigviewClose">✕</button>
+      <div id="placeholder">
+        Select a game to play.  
+        Use “Add Game” or “Add Folder” to import HTML files.
+      </div>
+      <iframe id="gameFrame"></iframe>
+    </div>
+
+    <div class="bottombar">
+      <span id="currentGameLabel">No game loaded</span>
+      <span>IndexedDB + srcdoc · No blobs</span>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ========================= -->
+<!--     MODE SELECT MODAL     -->
+<!-- ========================= -->
+<div class="modal-backdrop" id="modeModalBackdrop">
+  <div class="modal">
+    <h2>Add Game</h2>
+    <p style="font-size:0.85rem;">How do you want to import this game?</p>
+
+    <div class="modal-actions">
+      <button class="btn secondary" id="modeCancelBtn">Cancel</button>
+      <button class="btn secondary" id="modeQuickBtn">Quick Add</button>
+      <button class="btn" id="modeMetaBtn">Edit Metadata</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================= -->
+<!--     METADATA EDITOR       -->
+<!-- ========================= -->
+<div class="modal-backdrop" id="metaModalBackdrop">
+  <div class="modal">
+    <h2>Edit Metadata</h2>
+
+    <label>Title</label>
+    <input type="text" id="metaTitleInput">
+
+    <label>Tags (comma separated)</label>
+    <input type="text" id="metaTagsInput">
+
+    <label>Notes</label>
+    <textarea id="metaNotesInput"></textarea>
+
+    <label>Icon (optional)</label>
+    <input type="file" id="metaIconInput" accept="image/*">
+
+    <div class="modal-actions">
+      <button class="btn secondary" id="metaCancelBtn">Cancel</button>
+      <button class="btn" id="metaSaveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================= -->
+<!--     JAVASCRIPT FILE       -->
+<!-- ========================= -->
+<script src="launcher.js"></script>
+
+</body>
+</html>
